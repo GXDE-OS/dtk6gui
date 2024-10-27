@@ -176,6 +176,21 @@ const
     return m_iconEngine ? m_iconEngine->iconName() : QString();
 }
 
+QList<QSize> DIconProxyEngine::availableSizes(QIcon::Mode mode, QIcon::State state)
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    const
+#endif
+{
+    return m_iconEngine ? m_iconEngine->availableSizes(mode, state) : QIconEngine::availableSizes(mode, state);
+}
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+bool DIconProxyEngine::isNull()
+{
+    return m_iconEngine ? m_iconEngine->isNull() : QIconEngine::isNull();
+}
+#endif
+
 QString DIconProxyEngine::proxyKey()
 {
     ensureEngine();
@@ -211,9 +226,12 @@ void DIconProxyEngine::ensureEngine()
         return;
 
     static QMap<QString, QSet<QString>> nonCache;
-    const auto it = nonCache.find(theme);
-    if (it != nonCache.end() && it->contains(m_iconName))
-        return;
+    if (Q_UNLIKELY(!m_option.testFlag(DIconTheme::IgnoreIconCache)))
+    {
+        const auto it = nonCache.find(theme);
+        if (it != nonCache.end() && it->contains(m_iconName))
+            return;
+    }
 
     if (m_iconEngine) {
         // dci => dci
@@ -243,12 +261,12 @@ void DIconProxyEngine::ensureEngine()
         m_iconEngine = createDBuiltinIconEngine(m_iconName);
     }
 #ifdef DTK_DISABLE_LIBXDG
-    if (!m_iconEngine && Q_UNLIKELY(!m_option.testFlag(DIconTheme::DontFallbackToQIconFromTheme))) {
-        // fallback to QPlatformTheme::createIconEngine ==> QIconLoaderEngine
+    if (!m_iconEngine) {
         QPlatformTheme * const platformTheme = QGuiApplicationPrivate::platformTheme();
-        bool hasUserTheme = QIconLoader::instance()->hasUserTheme();
-        if (platformTheme && !hasUserTheme) {
+        if (platformTheme) {
             m_iconEngine = platformTheme->QPlatformTheme::createIconEngine(m_iconName);
+        } else {
+            qWarning() << "PlatformTheme not found!";
         }
     }
 #else
@@ -256,8 +274,8 @@ void DIconProxyEngine::ensureEngine()
         m_iconEngine = createXdgProxyIconEngine(m_iconName);
     }
 #endif
-    if (!m_iconEngine ) {
-        qErrnoWarning("create icon [%s] engine failed.[theme:%s] nonCache[theme].size[%d]",
+    if (!m_iconEngine && !nonCache[theme].contains(m_iconName)) {
+        qWarning("create icon [%s] engine failed.[theme:%s] nonCache[theme].size[%d]",
                       m_iconName.toUtf8().data(),
                       theme.toUtf8().data(), nonCache[theme].size());
         nonCache[theme].insert(m_iconName);

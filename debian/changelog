@@ -1,3 +1,78 @@
+dtk6gui (6.0.19) unstable; urgency=medium
+
+  * sync: from linuxdeepin/dtkgui
+  * sync: from linuxdeepin/dtkgui
+  * sync: from linuxdeepin/dtkgui
+
+ -- Deepin Packages Builder <packages@deepin.org>  Wed, 21 Aug 2024 02:41:05 +0000
+
+dtk6gui (6.0.18) unstable; urgency=medium
+
+  * sync: from linuxdeepin/dtkgui
+
+ -- Deepin Packages Builder <packages@deepin.org>  Mon, 08 Jul 2024 02:36:19 +0000
+
+dtk6gui (6.0.17) unstable; urgency=medium
+
+  [ root ]
+  * UNRELEASED
+
+ -- Deepin Packages Builder <packages@deepin.org>  Mon, 24 Jun 2024 05:35:04 +0000
+
+dtk6gui (6.0.16) unstable; urgency=medium
+
+  * 6.0.16
+
+ -- Mike Chen <chenke@deepin.org>  Mon, 13 May 2024 13:25:30 +0800
+
+dtk6gui (6.0.15) unstable; urgency=medium
+
+  * 6.0.15
+
+ -- YeShanShan <yeshanshan@deepin.org>  Mon, 29 Apr 2024 16:15:59 +0800
+
+dtk6gui (6.0.14) unstable; urgency=medium
+
+  * 6.0.14
+
+ -- YeShanShan <yeshanshan@deepin.org>  Sun, 28 Apr 2024 13:25:59 +0800
+
+dtk6gui (6.0.13) unstable; urgency=medium
+
+  * 6.0.13
+
+ -- YeShanShan <yeshanshan@deepin.org>  Fri, 26 Apr 2024 15:15:38 +0800
+
+dtk6gui (6.0.13) unstable; urgency=medium
+
+  * 6.0.13
+
+ -- YeShanShan <yeshanshan@deepin.org>  Thu, 25 Apr 2024 16:31:13 +0800
+
+dtk6gui (6.0.12) unstable; urgency=medium
+
+  * 6.0.12
+
+ -- YeShanShan <yeshanshan@deepin.org>  Tue, 23 Apr 2024 11:35:30 +0800
+
+dtk6gui (6.0.11) unstable; urgency=medium
+
+  * 6.0.11
+
+ -- Mike Chen <chenke@deepin.org>  Wed, 17 Apr 2024 17:25:33 +0800
+
+dtk6gui (6.0.10) unstable; urgency=medium
+
+  * 6.0.10
+
+ -- YeShanShan <yeshanshan@deepin.org>  Thu, 11 Apr 2024 11:40:40 +0800
+
+dtk6gui (6.0.9) unstable; urgency=medium
+
+  * 6.0.9
+
+ -- YeShanShan <yeshanshan@deepin.org>  Fri, 29 Mar 2024 17:58:04 +0800
+
 dtk6gui (6.0.5) unstable; urgency=medium
 
   * Release 6.0.5
