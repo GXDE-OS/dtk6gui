@@ -7,4 +7,6 @@ set(private_SRC
   ${CMAKE_CURRENT_LIST_DIR}/dregionmonitor_p.h 
   ${CMAKE_CURRENT_LIST_DIR}/dtaskbarcontrol_p.h 
   ${CMAKE_CURRENT_LIST_DIR}/dfontmanager_p.h
+  ${CMAKE_CURRENT_LIST_DIR}/dplatforminterface_p.h
+  ${CMAKE_CURRENT_LIST_DIR}/dplatformwindowinterface_p.h
 )

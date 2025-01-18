@@ -598,6 +598,8 @@ void DDciIconPrivate::loadIconList()
             node.entries << icon;
             node.maxPaddings = qMax(node.maxPaddings, icon->maxPaddings);
         }
+        if (node.entries.isEmpty())
+            continue;
         icons << std::move(node);
     }
 }
@@ -646,7 +648,7 @@ DDciIconEntry *DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme
     }
 
     const auto targetIcon = std::max_element(iconWeight.constBegin(), iconWeight.constEnd());
-    if (*targetIcon > 0)
+    if (targetIcon != iconWeight.constEnd() && *targetIcon > 0)
         return listOfSize.entries.at(targetIcon - iconWeight.constBegin());
     return nullptr;
 }
@@ -850,7 +852,7 @@ QList<int> DDciIcon::availableSizes(DDciIcon::Theme theme, DDciIcon::Mode mode) 
     return sizes;
 }
 
-bool DDciIcon::isSupportedAttribute(DDciIconMatchResult result, IconAttibute attr) const
+bool DDciIcon::isSupportedAttribute(DDciIconMatchResult result, IconAttribute attr) const
 {
     switch (attr) {
     case HasPalette:
@@ -862,7 +864,7 @@ bool DDciIcon::isSupportedAttribute(DDciIconMatchResult result, IconAttibute att
     return false;
 }
 
-bool DDciIcon::isSupportedAttribute(const DDciIconImage &image, IconAttibute attr)
+bool DDciIcon::isSupportedAttribute(const DDciIconImage &image, IconAttribute attr)
 {
     if (image.isNull())
         return false;

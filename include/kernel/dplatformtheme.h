@@ -13,6 +13,7 @@
 DGUI_BEGIN_NAMESPACE
 
 class DPlatformThemePrivate;
+// TODO: class DPlatformTheme will be removed in the future
 class DPlatformTheme : public DNativeSettings
 {
     Q_OBJECT
@@ -35,6 +36,7 @@ class DPlatformTheme : public DNativeSettings
     Q_PROPERTY(QByteArray gtkFontName READ gtkFontName WRITE setGtkFontName NOTIFY gtkFontNameChanged)
 
     Q_PROPERTY(QColor activeColor READ activeColor WRITE setActiveColor NOTIFY activeColorChanged)
+    Q_PROPERTY(QColor darkActiveColor READ darkActiveColor WRITE setDarkActiveColor NOTIFY darkActiveColorChanged)
 #if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     // QPalette
     Q_PROPERTY(QColor window READ window WRITE setWindow NOTIFY windowChanged)
@@ -101,6 +103,7 @@ public:
     QByteArray gtkFontName() const;
 
     QColor activeColor() const;
+    QColor darkActiveColor() const;
 
     bool isValidPalette() const;
 
@@ -152,6 +155,7 @@ public Q_SLOTS:
     void setFontPointSize(qreal fontPointSize);
     void setGtkFontName(const QByteArray &fontName);
     void setActiveColor(const QColor activeColor);
+    void setDarkActiveColor(const QColor &activeColor);
 #if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     void setWindow(const QColor &window);
     void setWindowText(const QColor &windowText);
@@ -201,6 +205,7 @@ Q_SIGNALS:
     void fontPointSizeChanged(qreal fontPointSize);
     void gtkFontNameChanged(QByteArray fontName);
     void activeColorChanged(QColor activeColor);
+    void darkActiveColorChanged(QColor activeColor);
     void paletteChanged(DPalette palette);
 #if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     void windowChanged(QColor window);
@@ -238,9 +243,6 @@ Q_SIGNALS:
 
 private:
     friend class DPlatformThemePrivate;
-
-private:
-    D_PRIVATE_SLOT(void _q_onThemePropertyChanged(const QByteArray &name, const QVariant &value))
 };
 
 DGUI_END_NAMESPACE

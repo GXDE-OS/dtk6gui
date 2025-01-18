@@ -59,7 +59,10 @@ public:
         IsXWindowPlatform        = ReadOnlyLimit << 2,
         IsTableEnvironment       = ReadOnlyLimit << 3,
         IsDeepinEnvironment      = ReadOnlyLimit << 4,
-        IsSpecialEffectsEnvironment = ReadOnlyLimit << 5
+        IsSpecialEffectsEnvironment = ReadOnlyLimit << 5,
+        IsWaylandPlatform       = ReadOnlyLimit << 6,
+        IsTreelandPlatform Q_DECL_ENUMERATOR_DEPRECATED_X("Use DGuiApplicationHelper::IsWaylandPlatform instead") = IsWaylandPlatform,
+        HasAnimations            = ReadOnlyLimit << 7,
     };
     Q_ENUM(Attribute)
     Q_DECLARE_FLAGS(Attributes, Attribute)

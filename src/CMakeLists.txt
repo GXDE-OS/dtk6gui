@@ -1,3 +1,9 @@
+if("${QT_VERSION_MAJOR}" STREQUAL "6")
+    find_package(Qt6 REQUIRED COMPONENTS Core Widgets WaylandClient)
+else()
+    find_package(Qt5 REQUIRED COMPONENTS WaylandClient XkbCommonSupport)
+endif()
+
 add_library(${LIB_NAME} SHARED)
 
 include(dbus/dbus.cmake)
@@ -5,6 +11,7 @@ include(filedrag/dfiledrag.cmake)
 include(kernel/kernel.cmake)
 include(private/private.cmake)
 include(util/util.cmake)
+include(plugins/plugins.cmake)
 
 target_sources(${LIB_NAME} PRIVATE
     ${dbus_SRC}
@@ -34,7 +41,15 @@ PRIVATE
     Qt${QT_VERSION_MAJOR}::GuiPrivate
     Qt${QT_VERSION_MAJOR}::CorePrivate
     Qt${QT_VERSION_MAJOR}::DBus
+    Qt${QT_VERSION_MAJOR}::WaylandClientPrivate
 )
+
+if("${QT_VERSION_MAJOR}" STREQUAL "5")
+target_link_libraries(${LIB_NAME}
+PRIVATE
+    Qt${QT_VERSION_MAJOR}::XkbCommonSupportPrivate
+)
+endif()
 
 if(DTK_DISABLE_LIBRSVG)
     find_package(Qt${QT_VERSION_MAJOR}Svg REQUIRED)
