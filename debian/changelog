@@ -1,3 +1,28 @@
+dtk6gui (6.0.32) unstable; urgency=medium
+
+  * sync: from linuxdeepin/dtkgui
+  * sync: from linuxdeepin/dtkgui
+
+ -- YeShanShan <yeshanshan@uniontech.com>  Thu, 06 Mar 2025 17:37:55 +0800
+
+dtk6gui (6.0.31) unstable; urgency=medium
+
+  * Release 6.0.31
+
+ -- YeShanShan <yeshanshan@uniontech.com>  Thu, 27 Feb 2025 20:56:45 +0800
+
+dtk6gui (6.0.30) unstable; urgency=medium
+
+  * sync: from linuxdeepin/dtkgui
+
+ -- YeShanShan <yeshanshan@uniontech.com>  Thu, 13 Feb 2025 17:14:12 +0800
+
+dtk6gui (6.0.29) unstable; urgency=medium
+
+  * 6.0.29
+
+ -- YeShanShan <yeshanshan@deepin.org>  Thu, 23 Jan 2025 17:07:35 +0800
+
 dtk6gui (6.0.28) unstable; urgency=medium
 
   * 6.0.28
