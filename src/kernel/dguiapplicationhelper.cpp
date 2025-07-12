@@ -5,8 +5,10 @@
 #include "dguiapplicationhelper.h"
 #include "private/dguiapplicationhelper_p.h"
 #include "dplatformhandle.h"
+
 #include <DFontManager>
 #include <DStandardPaths>
+#include <DSGApplication>
 
 #include <QHash>
 #include <QColor>
@@ -34,7 +36,6 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QProcess>
-#include <DConfig>
 #endif
 #include <QDir>
 #include <QLockFile>
@@ -58,8 +59,11 @@
 #include <qpa/qplatformtheme.h>
 
 #ifdef Q_OS_LINUX
+#include <pwd.h>
 #include <unistd.h>
 #endif
+
+#include "orgdeepindtkpreference.hpp"
 
 #ifdef Q_OS_UNIX
 class EnvReplaceGuard
@@ -115,10 +119,9 @@ Q_GLOBAL_STATIC(DFontManager, _globalFM)
 
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
-#define APP_THEME_TYPE "themeType"
-#define DTK_ENABLE_ANIMATIONS "enableDtkAnimations"
 #define DTK_ANIMATIONS_ENV "D_DTK_DISABLE_ANIMATIONS"
-Q_GLOBAL_STATIC_WITH_ARGS(DTK_CORE_NAMESPACE::DConfig, _d_dconfig, ("org.deepin.dtk.preference"));
+Q_GLOBAL_STATIC_WITH_ARGS(OrgDeepinDTKPreference, _d_dconfig, (DTK_CORE_NAMESPACE::DConfig::globalThread(), nullptr,
+                                                               "org.deepin.dtk.preference", DTK_CORE_NAMESPACE::DSGApplication::id(), {}, false, nullptr))
 
 /*!
  @private
@@ -445,7 +448,7 @@ void DGuiApplicationHelperPrivate::initPaletteType() const
         return;
 
     auto applyThemeType = [this](bool emitSignal){
-        int ct = _d_dconfig->value(APP_THEME_TYPE, DGuiApplicationHelper::UnknownType).toInt();
+        int ct = _d_dconfig->themeType();
         if (ct > DGuiApplicationHelper::DarkType || ct < DGuiApplicationHelper::UnknownType)
             ct = DGuiApplicationHelper::UnknownType;
 
@@ -454,10 +457,7 @@ void DGuiApplicationHelperPrivate::initPaletteType() const
 
     applyThemeType(false);
 
-    QObject::connect(_d_dconfig, &DConfig::valueChanged, _d_dconfig, [applyThemeType](const QString &key){
-        if (key != APP_THEME_TYPE)
-            return;
-
+    QObject::connect(_d_dconfig.operator ()(), &OrgDeepinDTKPreference::themeTypeChanged, _d_dconfig, [applyThemeType] {
         applyThemeType(true);
     });
 }
@@ -1633,6 +1633,28 @@ bool DGuiApplicationHelper::hasUserManual() const
     return userManualPaths(qApp->applicationName()).size() > 0;
 }
 
+static inline QStringList translateDirs(const QString &appName)
+{
+    Q_ASSERT(!appName.isEmpty());
+
+    QStringList dirs;
+
+    DCORE_USE_NAMESPACE
+    //("/home/user/.local/share", "/usr/local/share", "/usr/share")
+    auto dataDirs = DStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
+    for (const auto &path : dataDirs) {
+        DPathBuf pathBuf(path);
+        dirs << (pathBuf / appName / "translations").toString();
+    }
+
+    return dirs;
+}
+
+bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QString &appName, const QList<QLocale> &localeFallback)
+{
+    return loadTranslator(fileName, translateDirs(appName), localeFallback);
+}
+
 bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<QString> &translateDirs, const QList<QLocale> &localeFallback)
 {
     DCORE_USE_NAMESPACE;
@@ -1645,40 +1667,30 @@ bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<
     for (auto item : defaultDirPrefix)
         dirs << item.join("translations").toString();
 
-    QStringList missingQmfiles;
     for (const auto &locale : localeFallback) {
-        QStringList translateFilenames {QString("%1_%2").arg(fileName).arg(locale.name())};
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-        auto behavior = Qt::SkipEmptyParts;
-#else
-        auto behavior = QString::SkipEmptyParts;
-#endif
-        const QStringList parseLocalNameList = locale.name().split("_", behavior);
-        if (parseLocalNameList.length() > 0)
-            translateFilenames << QString("%1_%2").arg(fileName).arg(parseLocalNameList.at(0));
-
-        for (const auto &translateFilename : translateFilenames) {
-            for (const auto &dir : dirs) {
-                DPathBuf path(dir);
-                QString translatePath = (path / translateFilename).toString();
-                if (QFile::exists(translatePath + ".qm")) {
-                    qCDebug(dgAppHelper) << "load translate" << translatePath;
-                    auto translator = new QTranslator(qApp);
-                    translator->load(translatePath);
-                    qApp->installTranslator(translator);
-                    qApp->setProperty("dapp_locale", locale.name());
-                    return true;
-                }
+        for (const auto &dir : dirs) {
+            auto translator = new QTranslator(qApp);
+            // QTranslator::load(locale, filename, prefix, directory, suffix) automatically handles
+            // locale fallback (e.g., zh_CN -> zh -> C) and file existence checking
+            if (translator->load(locale, fileName, QString('_'), dir)) {
+                qCDebug(dgAppHelper) << "load translate" << fileName << "for locale" << locale.name() << "from" << dir;
+                qApp->installTranslator(translator);
+                qApp->setProperty("dapp_locale", locale.name());
+                return true;
             }
-
-            // fix english does not need to translation.
-            if (locale.language() != QLocale::English)
-                missingQmfiles << translateFilename + ".qm";
+            delete translator; // Clean up if loading failed
         }
     }
 
-    if (missingQmfiles.size() > 0) {
-        qWarning() << fileName << "can not find qm files" << missingQmfiles;
+    // Collect locale names for warning message
+    QStringList localeNames;
+    for (const auto &locale : localeFallback) {
+        if (locale.language() != QLocale::English) // English does not need translation
+            localeNames << locale.name();
+    }
+    
+    if (!localeNames.isEmpty()) {
+        qWarning() << fileName << "can not find qm files for locales" << localeNames;
     }
     return false;
 }
@@ -1693,25 +1705,15 @@ bool DGuiApplicationHelper::loadTranslator(const QList<QLocale> &localeFallback)
 
     DCORE_USE_NAMESPACE
     //("/home/user/.local/share", "/usr/local/share", "/usr/share")
-    auto dataDirs = DStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
-    QList<QString> qtranslateDirs = { qTranslationsPath };
-    for (const auto &path : dataDirs) {
-        DPathBuf pathBuf(path);
-        qtranslateDirs << (pathBuf / "qt" QT_STRINGIFY(QT_VERSION_MAJOR) / "translations").toString();
-    }
+    auto qtranslateDirs = translateDirs("qt" QT_STRINGIFY(QT_VERSION_MAJOR));
+    qtranslateDirs.prepend(qTranslationsPath);
 
     loadTranslator("qt", qtranslateDirs, localeFallback);
     loadTranslator("qtbase", qtranslateDirs, localeFallback);
 
-    QList<QString> translateDirs;
     auto appName = qApp->applicationName();
-    for (const auto &path : dataDirs) {
-        DPathBuf pathBuf(path);
-        translateDirs << (pathBuf / appName / "translations").toString();
-    }
 
-    // ${translateDir}/${appName}_${localeName}.qm
-    return loadTranslator(appName, translateDirs, localeFallback);
+    return loadTranslator(appName, appName, localeFallback);
 }
 
 DGuiApplicationHelper::SizeMode DGuiApplicationHelper::sizeMode() const
@@ -1781,8 +1783,7 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
         if (isDisable)
             return false;
 
-        static bool shouldEnable = _d_dconfig->value(DTK_ENABLE_ANIMATIONS, false).toBool();
-        return shouldEnable;
+        return _d_dconfig->enableDtkAnimations();
     }
     default:
         return DGuiApplicationHelperPrivate::attributes.testFlag(attribute);
@@ -1823,7 +1824,8 @@ void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType pale
 
     d->initPaletteType();
     d->setPaletteType(paletteType, true);
-    _d_dconfig->setValue(APP_THEME_TYPE, paletteType);
+    if (!DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::DontSaveApplicationTheme))
+        _d_dconfig->setThemeType(static_cast<int>(paletteType));
 }
 
 /*!
