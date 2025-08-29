@@ -60,6 +60,7 @@
 
 #ifdef Q_OS_LINUX
 #include <pwd.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
@@ -321,7 +322,7 @@ DPlatformTheme *DGuiApplicationHelperPrivate::initWindow(QWindow *window) const
     window->setProperty(WINDOW_THEME_KEY, QVariant::fromValue(theme));
     theme->setParent(window); // 跟随窗口销毁
 
-    auto onWindowThemeChanged = [window, theme, this] {
+    auto onWindowThemeChanged = [window, this] {
         // 如果程序自定义了调色板, 则没有必要再关心窗口自身平台主题的变化
         // 需要注意的是, 这里的信号和事件可能会与 notifyAppThemeChanged 中的重复
         // 但是不能因此而移除这里的通知, 当窗口自身所对应的平台主题发生变化时, 这里
@@ -1334,6 +1335,11 @@ void DGuiApplicationHelper::setApplicationPalette(const DPalette &palette)
  */
 DPalette DGuiApplicationHelper::windowPalette(QWindow *window) const
 {
+#if DTK_VERSION >= DTK_VERSION_CHECK(5, 0, 0, 0)
+    Q_UNUSED(window);
+    qCWarning(dgAppHelper) << "DGuiApplicationHelper::windowPalette is deprecated, please use applicationPalette instead.";
+    return applicationPalette();
+#else
     D_DC(DGuiApplicationHelper);
 
     // 如果程序自定义了调色版, 则不再关心窗口对应的平台主题上的设置
@@ -1348,6 +1354,7 @@ DPalette DGuiApplicationHelper::windowPalette(QWindow *window) const
     }
 
     return fetchPalette(theme);
+#endif
 }
 #endif
 
@@ -1492,6 +1499,18 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
         lockfile = QDir::cleanPath(QDir::tempPath());
         lockfile += QLatin1Char('/') + socket_key;
     }
+
+#ifdef Q_OS_LINUX
+    struct stat st{};
+    auto ret = ::lstat("/proc/self/ns/pid", &st);
+    if (ret < 0) {
+      qCWarning(dgAppHelper)
+          << "failed to get pid namespace:" << ::strerror(errno);
+      return false;
+    }
+    lockfile += QStringLiteral("_%1").arg(st.st_ino);
+#endif
+
     lockfile += QStringLiteral(".lock");
     static QScopedPointer <QLockFile> lock(new QLockFile(lockfile));
     // 同一个进程多次调用本接口使用最后一次设置的 key

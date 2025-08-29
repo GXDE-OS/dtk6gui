@@ -207,7 +207,11 @@ bool DDciIconImagePlayer::setPalette(const DDciIconPalette &palette)
     d->palette = palette;
 
     bool hasPalette = false;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    for (const auto &i : std::as_const(d->images))
+#else
     for (const auto &i : qAsConst(d->images))
+#endif
         if (i.hasPalette())
             hasPalette = true;
 
@@ -649,7 +653,7 @@ void DDciIconPlayerPrivate::initPlayer()
             // Remove the finished animation
             animationJobs.removeFirst();
 
-            qCDebug(diPlayer, "Number of animations remaining is %i", animationJobs.size());
+            qCDebug(diPlayer) << "Number of animations remaining is" << animationJobs.size();
             if (!animationJobs.isEmpty()) {
                 _q_playFromQueue();
                 return;
@@ -1075,10 +1079,15 @@ QImage DDciIconPlayer::currentImage() const
     return d->image;
 }
 
-void DDciIconPlayer::play(DDciIcon::Mode mode)
+void DDciIconPlayer::play(DDciIcon::Mode mode, DDciIconImagePlayer::Flags flags)
 {
     D_D(DDciIconPlayer);
-    d->play(mode, DDciIconImagePlayer::IgnoreLastImageLoop);
+    d->play(mode, flags);
+}
+
+void DDciIconPlayer::play(DDciIcon::Mode mode)
+{
+    play(mode, DDciIconImagePlayer::IgnoreLastImageLoop);
 }
 
 void DDciIconPlayer::stop()
