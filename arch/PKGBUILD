@@ -1,0 +1,41 @@
+# Maintainer: justforlxz <justforlxz@gmail.com>
+pkgname=dtk6gui-git
+pkgver=6.0.48
+pkgrel=1
+pkgdesc='Deepin Toolkit, gui module for DDE look and feel'
+arch=('x86_64' 'aarch64')
+url="https://github.com/GXDE-OS/dtk6gui"
+license=('LGPL-3.0-or-later')
+# librsvg 由 QLibrary 在运行时加载；上游在 Qt6 下禁用了 libqtxdg，未禁用 librsvg 时也不需要 qt6-svg
+# librsvg is loaded at runtime via QLibrary; upstream disables libqtxdg under Qt6, and qt6-svg is only used without librsvg.
+depends=('dtk6core-git' 'dtkcommon-git' 'qt6-base' 'librsvg' 'glib2' 'wayland' 'libx11' 'libgomp' 'libgcc' 'libstdc++' 'glibc')
+makedepends=('git' 'cmake' 'ninja' 'qt6-tools' 'extra-cmake-modules' 'treeland-protocols')
+provides=("dtk6gui=$pkgver")
+conflicts=('dtk6gui')
+groups=('deepin-git')
+source=()
+sha512sums=()
+
+# 直接使用 PKGBUILD 所在的 git 仓库作为源码 ・ Build from the git checkout this PKGBUILD lives in.
+_srcroot() {
+  git -C "$startdir" rev-parse --show-toplevel
+}
+
+build() {
+  # Arch 已移除 freeimage，因此关闭 RAW 等扩展图片格式支持
+  # freeimage is gone from Arch, so disable extended image formats such as RAW.
+  cmake -B build -S "$(_srcroot)" -GNinja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DCMAKE_INSTALL_LIBEXECDIR=lib \
+    -DMKSPECS_INSTALL_DIR=lib/qt6/mkspecs/modules \
+    -DDTK_DISABLE_EX_IMAGE_FORMAT=ON \
+    -DBUILD_TESTING=OFF \
+    -DBUILD_DOCS=OFF
+  ninja -C build
+}
+
+package() {
+  DESTDIR="$pkgdir" ninja -C build install
+}

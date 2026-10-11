@@ -24,7 +24,7 @@ Copyright: None
 License: CC0-1.0
 
 # RPM/Arch Packaging
-Files: archlinux/* rpm/*
+Files: arch/* rpm/*
 Copyright: None
 License: CC0-1.0
 
