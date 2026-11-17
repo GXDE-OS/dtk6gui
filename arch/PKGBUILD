@@ -1,5 +1,5 @@
 # Maintainer: justforlxz <justforlxz@gmail.com>
-pkgname=dtk6gui-git
+pkgname=gxde-dtk6gui
 pkgver=6.0.48
 pkgrel=1
 pkgdesc='Deepin Toolkit, gui module for DDE look and feel'
@@ -8,10 +8,11 @@ url="https://github.com/GXDE-OS/dtk6gui"
 license=('LGPL-3.0-or-later')
 # librsvg 由 QLibrary 在运行时加载；上游在 Qt6 下禁用了 libqtxdg，未禁用 librsvg 时也不需要 qt6-svg
 # librsvg is loaded at runtime via QLibrary; upstream disables libqtxdg under Qt6, and qt6-svg is only used without librsvg.
-depends=('dtk6core-git' 'dtkcommon-git' 'qt6-base' 'librsvg' 'glib2' 'wayland' 'libx11' 'libgomp' 'libgcc' 'libstdc++' 'glibc')
+depends=('gxde-dtk6core' 'gxde-dtkcommon' 'qt6-base' 'librsvg' 'glib2' 'wayland' 'libx11' 'libgomp' 'libgcc' 'libstdc++' 'glibc')
 makedepends=('git' 'cmake' 'ninja' 'qt6-tools' 'extra-cmake-modules' 'treeland-protocols')
-provides=("dtk6gui=$pkgver")
-conflicts=('dtk6gui')
+provides=("dtk6gui=$pkgver" "dtk6gui-git=$pkgver")
+conflicts=('dtk6gui' 'dtk6gui-git')
+replaces=('dtk6gui-git')
 groups=('deepin-git')
 source=()
 sha512sums=()
